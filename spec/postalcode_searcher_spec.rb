@@ -2,9 +2,9 @@
 require_relative '../postalcode_searcher.rb'
 
 RSpec.describe PostalcodeSearcher do
-  let(:index_filepath) { 'tmp/index.csv' }
-  let(:addresses_filepath) { 'tmp/addresses.csv' }
-  let(:output_filepath) { 'tmp/output.csv' }
+  let(:index_filepath) { 'spec/tmp/index.csv' }
+  let(:addresses_filepath) { 'spec/tmp/addresses.csv' }
+  let(:output_filepath) { 'spec/tmp/output.csv' }
 
   before do
     CSV.open(index_filepath, "w") do |csv|
