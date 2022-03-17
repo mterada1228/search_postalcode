@@ -2,6 +2,8 @@ require 'csv'
 require 'set'
 
 class PostalcodeSearcher
+  POSTALCODE_INDEX = 0.freeze
+
   POSTALCODE_COLUMN_NUMBER   = 2.freeze
   PREFECTURE_COLUMN_NUMBER   = 6.freeze
   MUNICIPALITY_COLUMN_NUMBER = 7.freeze
@@ -61,17 +63,35 @@ class PostalcodeSearcher
   end
 
   def print_postalcodes(indexes)
+    postalcodes = Set.new(postalcodes(indexes.map(&:to_i)))
+
     if @output == 'STDOUT'
-      indexes.each do |index|
-        p @addresses_table[index.to_i].join(',')
+      postalcodes.each do |postalcode|
+        p printed_line(postalcode).join(', ')
       end
     else
       CSV.open(@output, 'w') do |file|
-        indexes.each do |index|
-          file << @addresses_table[index.to_i]
+        postalcodes.each do |postalcode|
+          file << printed_line(postalcode)
         end
       end
     end
+  end
+
+  def postalcodes(indexes)
+    indexes.map do |index|
+      @addresses_table[index][POSTALCODE_INDEX]
+    end
+  end
+
+  def printed_line(postalcode)
+    postalcode_hash_table[postalcode].flat_map do |addresses|
+      addresses[POSTALCODE_INDEX+1..-1]
+    end.unshift(postalcode)
+  end
+
+  def postalcode_hash_table
+    @postalcode_hash_table ||= @addresses_table.group_by { |table| table[POSTALCODE_INDEX] }
   end
 
   def default_output
