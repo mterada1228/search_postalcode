@@ -1,8 +1,8 @@
 require_relative '../index_file_creator.rb'
 
 RSpec.describe IndexFileCreator do
-  let(:input_filepath) { 'tmp/input.csv' }
-  let(:output_filepath) { 'tmp/output.csv' }
+  let(:input_filepath) { 'spec/tmp/input.csv' }
+  let(:output_filepath) { 'spec/tmp/output.csv' }
   let(:rows) do
     [
       ['', '', '', '', '', '', '', '東京都世田谷区', ''],

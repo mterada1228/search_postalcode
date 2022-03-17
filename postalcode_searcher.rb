@@ -3,16 +3,22 @@ require 'set'
 
 class PostalcodeSearcher
   POSTALCODE_INDEX = 0.freeze
+  ADDRESSES_START_INDEX = 1.freeze
+
+  INDEX_FILE_WORD_COLUMN_NUMBER = 0.freeze
+  INDEX_FILE_INDEXES_START_COLUMN_NUMBER = 0.freeze
 
   POSTALCODE_COLUMN_NUMBER   = 2.freeze
   PREFECTURE_COLUMN_NUMBER   = 6.freeze
   MUNICIPALITY_COLUMN_NUMBER = 7.freeze
   STREET_COLUMN_NUMBER       = 8.freeze
 
+  DEFAULT_OUTPUT = 'STDOUT'.freeze
+
   def initialize(search_address:,
                  index_filepath:,
                  addresses_filepath:,
-                 output_filepath: default_output)
+                 output_filepath: DEFAULT_OUTPUT)
     @address = search_address
     @indexes_hash = indexes_hash(index_filepath)
     @addresses_table = addresses_table(addresses_filepath)
@@ -26,19 +32,12 @@ class PostalcodeSearcher
 
   private
 
-  def devide_address(address)
-    address_trimmed_space = address.gsub(' ', '')
-    return address_trimmed_space.scan(/\S{2}/) if address_trimmed_space.length.even?
-
-    address_trimmed_space.scan(/\S{2}/).append("#{address_trimmed_space[-2]}#{address_trimmed_space[-1]}")
-  end
-
   def indexes_hash(index_filepath)
     indexes_hash = Hash.new { |hash, key| hash[key] = [] }
 
     CSV.read(index_filepath).each do |line|
-      word = line[0]
-      indexes = line.slice(1, line.length - 1)
+      word = line[INDEX_FILE_WORD_COLUMN_NUMBER]
+      indexes = line[INDEX_FILE_INDEXES_START_COLUMN_NUMBER..-1]
       indexes_hash[word] = indexes
     end
 
@@ -60,6 +59,13 @@ class PostalcodeSearcher
     Set.new(words.map do |word|
       @indexes_hash[word]
     end.inject(:&))
+  end
+
+  def devide_address(address)
+    address_trimmed_space = address.gsub(/\s|　/, '')
+    return address_trimmed_space.scan(/.{2}/) if address_trimmed_space.length.even?
+
+    address_trimmed_space.scan(/.{2}/).append(address_trimmed_space.slice(-2, 2))
   end
 
   def print_postalcodes(indexes)
@@ -86,15 +92,11 @@ class PostalcodeSearcher
 
   def printed_line(postalcode)
     postalcode_hash_table[postalcode].flat_map do |addresses|
-      addresses[POSTALCODE_INDEX+1..-1]
+      addresses[ADDRESSES_START_INDEX..-1]
     end.unshift(postalcode)
   end
 
   def postalcode_hash_table
     @postalcode_hash_table ||= @addresses_table.group_by { |table| table[POSTALCODE_INDEX] }
-  end
-
-  def default_output
-    'STDOUT'
   end
 end
